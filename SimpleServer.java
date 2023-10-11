@@ -35,17 +35,26 @@ public class SimpleServer {
         @Override
         public void run() {
             try (
-                BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                //setup reader and write object
+                BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), "UTF-8"));
                 PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true)
             ) {
+                //read input and perform
                 String inputLine;
                 while ((inputLine = reader.readLine()) != null) {
+                    
+                    //remove BOM
+                    if (inputLine != null && inputLine.startsWith("\uFEFF")) {
+                        inputLine = inputLine.substring(1); // Remove the BOM character
+                    }
+
                     System.out.println("Received message from " + clientSocket.getInetAddress() + ": " + inputLine);
                     writer.println("Server: Received your message - " + inputLine);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
+                //try to close the server
                 try {
                     clientSocket.close();
                     System.out.println("Client disconnected: " + clientSocket.getInetAddress());
