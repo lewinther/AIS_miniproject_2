@@ -1,5 +1,9 @@
 import javax.net.ssl.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.security.KeyStore;
 
 public class TLSServer {
@@ -8,17 +12,19 @@ public class TLSServer {
         int port = 9999;
 
         try {
+            char[] keystorePassword = "Drejer1235".toCharArray();
+            String keystorePath = "server_keystore.jks";
+
             // Load the keystore with the server's certificate and private key
-            char[] keystorePassword = "Drejer".toCharArray();
             KeyStore keyStore = KeyStore.getInstance("JKS");
-            keyStore.load(new FileInputStream("server_keystore.jks"), keystorePassword);
+            keyStore.load(new FileInputStream(keystorePath), keystorePassword);
 
             // Set up the key manager factory
             KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
             keyManagerFactory.init(keyStore, keystorePassword);
 
-            // Set up the SSL context
-            SSLContext sslContext = SSLContext.getInstance("TLS");
+            // Set up the SSL context with specific protocols and cipher suites
+            SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
             sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
 
             // Create an SSLServerSocketFactory
