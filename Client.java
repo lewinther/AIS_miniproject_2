@@ -1,42 +1,44 @@
 import java.io.*;
 import java.net.*;
+import java.util.Scanner;
  
 // Main class
 public class Client {
- 
-    // Main driver method
-    public static void main(String[] args)
-    {
- 
-        // Try block to check if exception occurs
-        try {
- 
-            // Creating Socket class object and
-            // initializing Socket
-            Socket soc = new Socket("localhost", 6666);
- 
-            DataOutputStream d = new DataOutputStream(
-                soc.getOutputStream());
- 
-            // Message to be displayed
-            d.writeUTF("Hello GFG Readers!");
- 
-            // Flushing out internal buffers,
-            // optimizing for better performance
-            d.flush();
- 
-            // Closing the connections
- 
-            // Closing DataOutputStream
-            d.close();
-            // Closing socket
-            soc.close();
+    DataOutputStream d;
+    Socket soc;
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        String input;
+
+        while (true) {
+            System.out.print("Enter a command (type 'exit' to quit): ");
+            input = scanner.nextLine();
+            Client client = new Client(input, "localhost", 7007);
         }
- 
-        // Catch block to handle exceptions
+    }
+
+    public Client(String msg, String ip, int port) {
+        try {
+            soc = new Socket("localhost", port);
+            d = new DataOutputStream(soc.getOutputStream());
+            d.writeUTF(msg);
+            d.flush();
+            d.close();
+            soc.close();
+            System.out.println("Done");
+        }
         catch (Exception e) {
- 
-            // Print the exception on the console
+            System.out.println(e);
+        }
+    }
+
+    public void end() {
+        try {
+            d.close();
+            soc.close();
+        } 
+        catch (Exception e) {
             System.out.println(e);
         }
     }
