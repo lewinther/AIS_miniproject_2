@@ -5,7 +5,7 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class SimpleServer {
+public class Server {
     public static void main(String[] args) {
         int port = 7007; // Change this to the port you want to use
 
@@ -42,12 +42,6 @@ public class SimpleServer {
                 //read input and perform
                 String inputLine;
                 while ((inputLine = reader.readLine()) != null) {
-                    
-                    //remove BOM
-                    if (inputLine != null && inputLine.startsWith("\uFEFF")) {
-                        inputLine = inputLine.substring(1); // Remove the BOM character
-                    }
-
                     System.out.println("Received message from " + clientSocket.getInetAddress() + ": " + inputLine);
                     writer.println("Server: Received your message - " + inputLine);
                 }
