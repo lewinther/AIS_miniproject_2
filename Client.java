@@ -1,45 +1,58 @@
+import javax.net.ssl.*;
 import java.io.*;
-import java.net.*;
-import java.util.Scanner;
- 
-// Main class
+import java.security.*;
+
 public class Client {
-    DataOutputStream d;
-    Socket soc;
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        String input;
-
-        while (true) {
-            System.out.print("Enter a command (type 'exit' to quit): ");
-            input = scanner.nextLine();
-            Client client = new Client(input, "localhost", 7007);
-        }
-    }
-
-    public Client(String msg, String ip, int port) {
         try {
-            soc = new Socket("localhost", port);
-            d = new DataOutputStream(soc.getOutputStream());
-            d.writeUTF(msg);
-            d.flush();
-            d.close();
-            soc.close();
-            System.out.println("Done");
-        }
-        catch (Exception e) {
-            System.out.println(e);
-        }
-    }
+            //Open the truststore
+            char[] truststorePassword = "password123".toCharArray();
+            KeyStore truststore = KeyStore.getInstance("JKS");
+            truststore.load(new FileInputStream("truststore.jks"), truststorePassword);
 
-    public void end() {
-        try {
-            d.close();
-            soc.close();
-        } 
-        catch (Exception e) {
-            System.out.println(e);
+            //Create the SSL (Secure Sockets Layer)
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509");
+            trustManagerFactory.init(truststore);
+            SSLContext sslContext = SSLContext.getInstance("TLSv1.3");
+            sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+
+            //Create client socket SSL
+            SSLSocketFactory socketFactory = sslContext.getSocketFactory();
+            SSLSocket clientSocket = (SSLSocket) socketFactory.createSocket("localhost", 7007);
+
+            //Set up input and output streams for communication with the server
+            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+
+            //Setup input from terminal
+            BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in));
+
+            //Listen for input from the terminal
+            while (true) {
+                //Wait for input
+                System.out.print("Input: ");
+                String clientMessage = consoleInput.readLine();
+                //Send input to server
+                out.println(clientMessage);
+
+                //Read output from server
+                System.out.println("Server: " + in.readLine());
+
+                //Close connection when sending specific message
+                if (clientMessage.equalsIgnoreCase("fuck")) {
+                    System.out.println("Disconnected from server");
+                    break;
+                }
+            }
+
+            //Close client socket when input loop ends
+            in.close();
+            out.close();
+            clientSocket.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
