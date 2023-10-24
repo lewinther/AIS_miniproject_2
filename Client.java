@@ -5,48 +5,45 @@ import java.security.*;
 public class Client {
 
     public static void main(String[] args) {
-        try {
-            //Open the truststore
-            char[] truststorePassword = "password123".toCharArray();
-            KeyStore truststore = KeyStore.getInstance("JKS");
-            truststore.load(new FileInputStream("truststore.jks"), truststorePassword);
+        Client client = new Client("Hello", "localhost", 7007);
 
-            //Create the SSL (Secure Sockets Layer)
+    }
+
+    public Client(String message, String ip, int port) {
+        try {
+            //Access the truststore
+            KeyStore truststore = KeyStore.getInstance("JKS");
+            truststore.load(new FileInputStream("truststore.jks"), "password123".toCharArray());
+
+            //Setup TLS protocol using TLS 1.3 and SunX509 algorithm to validate certificate
             TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509");
             trustManagerFactory.init(truststore);
-            SSLContext sslContext = SSLContext.getInstance("TLSv1.3");
-            sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+            SSLContext TLS_Context = SSLContext.getInstance("TLSv1.3");
+            TLS_Context.init(null, trustManagerFactory.getTrustManagers(), null);
 
-            //Create client socket SSL
-            SSLSocketFactory socketFactory = sslContext.getSocketFactory();
-            SSLSocket clientSocket = (SSLSocket) socketFactory.createSocket("localhost", 7007);
+            //Establish Connection
+            SSLSocketFactory socketFactory = TLS_Context.getSocketFactory();
+            SSLSocket clientSocket = (SSLSocket) socketFactory.createSocket(ip, port);
 
-            //Set up input and output streams for communication with the server
+            clientSocket.addHandshakeCompletedListener(new HandshakeCompletedListener() {
+                @Override
+                public void handshakeCompleted(HandshakeCompletedEvent event) {
+                    System.out.println("Handshaked");
+                }
+            });
+
+            //Set up input and output streams on the created socket
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 
-            //Setup input from terminal
-            BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in));
+            //Send message to server
+            out.println(message);
+            System.out.println("Message to server: " + message);
 
-            //Listen for input from the terminal
-            while (true) {
-                //Wait for input
-                System.out.print("Input: ");
-                String clientMessage = consoleInput.readLine();
-                //Send input to server
-                out.println(clientMessage);
+            //Read output from server
+            System.out.println("Message from server: " + in.readLine());
 
-                //Read output from server
-                System.out.println("Server: " + in.readLine());
-
-                //Close connection when sending specific message
-                if (clientMessage.equalsIgnoreCase("fuck")) {
-                    System.out.println("Disconnected from server");
-                    break;
-                }
-            }
-
-            //Close client socket when input loop ends
+            //Close client socket
             in.close();
             out.close();
             clientSocket.close();
