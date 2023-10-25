@@ -25,11 +25,8 @@ public class Client {
             SSLSocketFactory socketFactory = TLS_Context.getSocketFactory();
             SSLSocket clientSocket = (SSLSocket) socketFactory.createSocket(ip, port);
 
-            clientSocket.addHandshakeCompletedListener(new HandshakeCompletedListener() {
-                @Override
-                public void handshakeCompleted(HandshakeCompletedEvent event) {
-                    System.out.println("Handshaked");
-                }
+            clientSocket.addHandshakeCompletedListener(event -> {
+                System.out.println("Handshake completed using " + event.getCipherSuite());
             });
 
             //Set up input and output streams on the created socket

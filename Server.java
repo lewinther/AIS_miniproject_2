@@ -6,7 +6,7 @@ public class Server {
 
     public static void main(String[] args) {
         try {
-            //Open the keystore
+            //Access the keystore
             char[] keystorePassword = "password123".toCharArray();
             KeyStore keyStore = KeyStore.getInstance("JKS");
             keyStore.load(new FileInputStream("keystore.jks"), keystorePassword);
@@ -31,11 +31,8 @@ public class Server {
                 System.out.println("Client Connecting");
 
                 //listen for completed handshake on the client socket
-                clientSocket.addHandshakeCompletedListener(new HandshakeCompletedListener() {
-                    @Override
-                    public void handshakeCompleted(HandshakeCompletedEvent event) {
-                        System.out.println("Handshaked");
-                    }
+                clientSocket.addHandshakeCompletedListener(event -> {
+                    System.out.println("Handshake completed using " + event.getCipherSuite());
                 });
 
                 //Set up input and output streams on the created socket
